@@ -3,7 +3,7 @@ module github.com/khulnasoft/tunnel-kubernetes
 go 1.21.1
 
 require (
-	github.com/aws/aws-sdk-go v1.48.9
+	github.com/aws/aws-sdk-go v1.48.11
 	github.com/davecgh/go-spew v1.1.1
 	github.com/google/go-containerregistry v0.17.0
 	github.com/mitchellh/mapstructure v1.5.0
