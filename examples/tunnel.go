@@ -7,7 +7,7 @@ import (
 
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/artifacts"
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/k8s"
-	"github.com/khulnasoft/tunnel-kubernetes/pkg/tunnelk8s"
+	tk "github.com/khulnasoft/tunnel-kubernetes/pkg/tunnelk8s"
 
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -30,9 +30,7 @@ func main() {
 
 	fmt.Println("Current namespace:", cluster.GetCurrentNamespace())
 
-	tunnelk8sCopy := tunnelk8s.New(cluster, logger.Sugar(), tunnelk8s.WithExcludeOwned(true))
-	tunnelk8s := tunnelk8s.New(cluster, logger.Sugar(), tunnelk8s.WithExcludeOwned(true))
-
+	tunnelk8s := tk.New(cluster, logger.Sugar(), tk.WithExcludeOwned(true))
 	fmt.Println("Scanning cluster")
 
 	//tunnel k8s #cluster
@@ -51,13 +49,13 @@ func main() {
 
 	fmt.Println("Scanning namespace 'default'")
 	//tunnel k8s --namespace default
-	artifacts, err = tunnelk8sCopy.Namespace("default").ListArtifacts(ctx)
+	artifacts, err = tunnelk8s.Namespace("default").ListArtifacts(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 	printArtifacts(artifacts)
 	fmt.Println("Scanning all namespaces ")
-	artifacts, err = tunnelk8sCopy.AllNamespaces().ListArtifacts(ctx)
+	artifacts, err = tunnelk8s.AllNamespaces().ListArtifacts(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,7 +64,7 @@ func main() {
 	fmt.Println("Scanning namespace 'default', resource 'deployment/orion'")
 
 	//tunnel k8s --namespace default deployment/orion
-	artifact, err := tunnelk8sCopy.Namespace("default").GetArtifact(ctx, "deploy", "orion")
+	artifact, err := tunnelk8s.Namespace("default").GetArtifact(ctx, "deploy", "orion")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,7 +73,7 @@ func main() {
 	fmt.Println("Scanning 'deployments'")
 
 	//tunnel k8s deployment
-	artifacts, err = tunnelk8sCopy.Namespace("default").Resources("deployment").ListArtifacts(ctx)
+	artifacts, err = tunnelk8s.Namespace("default").Resources("deployment").ListArtifacts(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -83,7 +81,7 @@ func main() {
 
 	fmt.Println("Scanning 'cm,pods'")
 	//tunnel k8s clusterroles,pods
-	artifacts, err = tunnelk8sCopy.Namespace("default").Resources("cm,pods").ListArtifacts(ctx)
+	artifacts, err = tunnelk8s.Namespace("default").Resources("cm,pods").ListArtifacts(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,7 +111,10 @@ func main() {
 	}
 
 	// collect node info
-	ar, err := tunnelk8sCopy.ListArtifactAndNodeInfo(ctx, "tunnel-temp", map[string]string{"chen": "test"}, tolerations...)
+	ar, err := tunnelk8s.ListArtifactAndNodeInfo(ctx, []tk.NodeCollectorOption{
+		tk.WithScanJobNamespace("tunnel-temp"),
+		tk.WithIgnoreLabels(map[string]string{"chen": "test"}),
+		tk.WithTolerations(tolerations)}...)
 	if err != nil {
 		log.Fatal(err)
 	}
