@@ -1,6 +1,6 @@
 module github.com/khulnasoft/tunnel-kubernetes
 
-go 1.21.1
+go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.48.9
