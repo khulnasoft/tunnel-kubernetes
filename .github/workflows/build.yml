@@ -4,6 +4,7 @@
 # will not introduce any regression after merging the code to the main branch.
 name: Build
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
