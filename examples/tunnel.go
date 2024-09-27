@@ -9,7 +9,6 @@ import (
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/k8s"
 	tk "github.com/khulnasoft/tunnel-kubernetes/pkg/tunnelk8s"
 
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/utils/pointer"
 
@@ -17,9 +16,6 @@ import (
 )
 
 func main() {
-
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
 
 	ctx := context.Background()
 
@@ -30,7 +26,7 @@ func main() {
 
 	fmt.Println("Current namespace:", cluster.GetCurrentNamespace())
 
-	tunnelk8s := tk.New(cluster, logger.Sugar(), tk.WithExcludeOwned(true))
+	tunnelk8s := tk.New(cluster, tk.WithExcludeOwned(true))
 	fmt.Println("Scanning cluster")
 
 	//tunnel k8s #cluster
@@ -114,7 +110,8 @@ func main() {
 	ar, err := tunnelk8s.ListArtifactAndNodeInfo(ctx, []tk.NodeCollectorOption{
 		tk.WithScanJobNamespace("tunnel-temp"),
 		tk.WithIgnoreLabels(map[string]string{"chen": "test"}),
-		tk.WithTolerations(tolerations)}...)
+		tk.WithTolerations(tolerations),
+	}...)
 	if err != nil {
 		log.Fatal(err)
 	}
