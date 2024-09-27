@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/bom"
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/jobs"
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/k8s"
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,7 +50,6 @@ type client struct {
 	namespace     string
 	resources     []string
 	allNamespaces bool
-	logger        *zap.SugaredLogger
 	excludeOwned  bool
 	scanJobParams scanJobParams
 }
@@ -64,8 +63,10 @@ func WithExcludeOwned(excludeOwned bool) K8sOption {
 }
 
 // New creates a tunnelK8S client
-func New(cluster k8s.Cluster, logger *zap.SugaredLogger, opts ...K8sOption) TunnelK8S {
-	c := &client{cluster: cluster, logger: logger}
+func New(cluster k8s.Cluster, opts ...K8sOption) TunnelK8S {
+	c := &client{
+		cluster: cluster,
+	}
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -120,7 +121,7 @@ func (c *client) ListArtifacts(ctx context.Context) ([]*artifacts.Artifact, erro
 			lerr := fmt.Errorf("failed listing resources for gvr: %v - %w", gvr, err)
 
 			if errors.IsNotFound(err) {
-				c.logger.Error(lerr)
+				slog.Error("Unable to list resources", "error", lerr)
 				// if a resource is not found, we log and continue
 				continue
 			}
@@ -251,7 +252,11 @@ func (c *client) ListArtifactAndNodeInfo(ctx context.Context,
 		if err != nil {
 			return nil, err
 		}
-		artifactList = append(artifactList, &artifacts.Artifact{Kind: "NodeInfo", Name: resource.Name, RawResource: nodeInfo})
+		artifactList = append(artifactList, &artifacts.Artifact{
+			Kind:        "NodeInfo",
+			Name:        resource.Name,
+			RawResource: nodeInfo,
+		})
 	}
 	return artifactList, err
 }
@@ -274,20 +279,38 @@ func BomToArtifacts(b *bom.Result) ([]*artifacts.Artifact, error) {
 		if err != nil {
 			return []*artifacts.Artifact{}, err
 		}
-		artifactList = append(artifactList, &artifacts.Artifact{Kind: "ControlPlaneComponents", Namespace: c.Namespace, Name: c.Name, RawResource: rawResource})
+		artifactList = append(artifactList, &artifacts.Artifact{
+			Kind:        "ControlPlaneComponents",
+			Namespace:   c.Namespace,
+			Name:        c.Name,
+			RawResource: rawResource,
+		})
 	}
 	for _, ni := range b.NodesInfo {
 		rawResource, err := rawResource(&ni)
 		if err != nil {
 			return []*artifacts.Artifact{}, err
 		}
-		artifactList = append(artifactList, &artifacts.Artifact{Kind: "NodeComponents", Name: ni.NodeName, RawResource: rawResource})
+		artifactList = append(artifactList, &artifacts.Artifact{
+			Kind:        "NodeComponents",
+			Name:        ni.NodeName,
+			RawResource: rawResource,
+		})
 	}
-	cr, err := rawResource(&bom.Result{ID: b.ID, Type: "ClusterInfo", Version: b.Version, Properties: b.Properties})
+	cr, err := rawResource(&bom.Result{
+		ID:         b.ID,
+		Type:       "ClusterInfo",
+		Version:    b.Version,
+		Properties: b.Properties,
+	})
 	if err != nil {
 		return []*artifacts.Artifact{}, err
 	}
-	artifactList = append(artifactList, &artifacts.Artifact{Kind: "Cluster", Name: b.ID, RawResource: cr})
+	artifactList = append(artifactList, &artifacts.Artifact{
+		Kind:        "Cluster",
+		Name:        b.ID,
+		RawResource: cr,
+	})
 	return artifactList, nil
 }
 
