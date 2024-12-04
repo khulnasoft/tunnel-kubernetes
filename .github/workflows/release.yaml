@@ -11,7 +11,7 @@ on:
     tags:
       - "v*"
 env:
-  GO_VERSION: "1.20.4"
+  GO_VERSION: "1.21.6"
 jobs:
   unit-tests:
     name: Run unit tests
@@ -44,7 +44,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Release
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           version: v1.7.0
           args: release --rm-dist

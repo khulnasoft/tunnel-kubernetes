@@ -4,40 +4,39 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/artifacts"
 	"github.com/khulnasoft/tunnel-kubernetes/pkg/k8s"
 	tk "github.com/khulnasoft/tunnel-kubernetes/pkg/tunnelk8s"
 
-	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"context"
 )
 
 func main() {
-
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-
 	ctx := context.Background()
 
-	cluster, err := k8s.GetCluster()
+	cluster, err := k8s.GetCluster(k8s.WithBurst(100), k8s.WithQPS(100))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println("Current namespace:", cluster.GetCurrentNamespace())
 
-	tunnelk8s := tk.New(cluster, logger.Sugar(), tk.WithExcludeOwned(true))
+	tunnelk8s := tk.New(cluster, tk.WithExcludeOwned(true))
 	fmt.Println("Scanning cluster")
 
 	//tunnel k8s #cluster
+	start := time.Now()
 	artifacts, err := tunnelk8s.ListArtifacts(ctx)
+	end := time.Now()
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Printf("Scan took %v\n", end.Sub(start))
 	printArtifacts(artifacts)
 
 	fmt.Println("Scanning kind 'pods' with exclude-owned=true")
@@ -60,15 +59,6 @@ func main() {
 		log.Fatal(err)
 	}
 	printArtifacts(artifacts)
-
-	fmt.Println("Scanning namespace 'default', resource 'deployment/orion'")
-
-	//tunnel k8s --namespace default deployment/orion
-	artifact, err := tunnelk8s.Namespace("default").GetArtifact(ctx, "deploy", "orion")
-	if err != nil {
-		log.Fatal(err)
-	}
-	printArtifact(artifact)
 
 	fmt.Println("Scanning 'deployments'")
 
@@ -100,13 +90,13 @@ func main() {
 			Effect:            corev1.TaintEffectNoExecute,
 			Key:               "node.kubernetes.io/not-ready",
 			Operator:          corev1.TolerationOperator(corev1.NodeSelectorOpExists),
-			TolerationSeconds: pointer.Int64(300),
+			TolerationSeconds: ptr.To[int64](300),
 		},
 		{
 			Effect:            corev1.TaintEffectNoExecute,
 			Key:               "node.kubernetes.io/unreachable",
 			Operator:          corev1.TolerationOperator(corev1.NodeSelectorOpExists),
-			TolerationSeconds: pointer.Int64(300),
+			TolerationSeconds: ptr.To[int64](300),
 		},
 	}
 
@@ -114,7 +104,8 @@ func main() {
 	ar, err := tunnelk8s.ListArtifactAndNodeInfo(ctx, []tk.NodeCollectorOption{
 		tk.WithScanJobNamespace("tunnel-temp"),
 		tk.WithIgnoreLabels(map[string]string{"chen": "test"}),
-		tk.WithTolerations(tolerations)}...)
+		tk.WithTolerations(tolerations),
+	}...)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -34,7 +34,9 @@ func TestGetCurrentNamespace(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			fakeConfig := createValidTestConfig(test.Namespace)
-			cluster, err := getCluster(fakeConfig, nil, "", true)
+			fakeKubeconfig, err := fakeConfig.ClientConfig()
+			assert.NoError(t, err)
+			cluster, err := getCluster(fakeConfig, fakeKubeconfig, nil, "", true)
 			assert.NoError(t, err)
 			assert.Equal(t, test.ExpectedNamespace, cluster.GetCurrentNamespace())
 		})
@@ -66,7 +68,10 @@ func TestGetGVR(t *testing.T) {
 
 		fakeConfig := createValidTestConfig("")
 
-		cluster, err := getCluster(fakeConfig, mapper, "", true)
+		fakeKubeconfig, err := fakeConfig.ClientConfig()
+		assert.NoError(t, err)
+
+		cluster, err := getCluster(fakeConfig, fakeKubeconfig, mapper, "", true)
 		assert.NoError(t, err)
 
 		gvr, err := cluster.GetGVR(test.Resource)
@@ -187,19 +192,17 @@ func TestNodeInfo(t *testing.T) {
 					NodeInfo: v1.NodeSystemInfo{
 						Architecture:            "amd64",
 						ContainerRuntimeVersion: "containerd://1.5.2",
-						KubeletVersion:          "v1.21.1",
+						KubeletVersion:          "1.21.1",
 						KernelVersion:           "6.5.9-300.fc39.aarch64",
 						OperatingSystem:         "linux",
 						OSImage:                 "Ubuntu 21.04",
-						KubeProxyVersion:        "v1.21.1",
 					},
 				},
 			},
 
 			want: bom.NodeInfo{
 				NodeName:                "node1",
-				KubeletVersion:          "v1.21.1",
-				KubeProxyVersion:        "v1.21.1",
+				KubeletVersion:          "1.21.1",
 				ContainerRuntimeVersion: "containerd://1.5.2",
 				OsImage:                 "Ubuntu 21.04",
 				Properties: map[string]string{
