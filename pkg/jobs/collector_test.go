@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	tunnel-checks "github.com/khulnasoft/tunnel-checks"
+	tunnel_checks "github.com/khulnasoft/tunnel-checks"
 	"github.com/stretchr/testify/assert"
 )
 

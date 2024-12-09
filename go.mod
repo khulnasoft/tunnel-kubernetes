@@ -2,12 +2,11 @@ module github.com/khulnasoft/tunnel-kubernetes
 
 go 1.22.9
 
-toolchain go1.23.3
-
 require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/google/go-containerregistry v0.20.2
+	github.com/khulnasoft/tunnel-checks v0.0.1
 	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.31.3
@@ -25,10 +24,8 @@ require (
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/google/gnostic-models v0.6.9-0.20230804172637-c7be7c783f49 // indirect
 	github.com/moby/term v0.5.0 // indirect
-	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/tools v0.27.0 // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.12.0 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
 )
