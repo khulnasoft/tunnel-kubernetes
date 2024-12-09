@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	tunnel_checks "github.com/aquasecurity/trivy-checks"
+	tunnel-checks "github.com/khulnasoft/tunnel-checks"
 	"github.com/stretchr/testify/assert"
 )
 
